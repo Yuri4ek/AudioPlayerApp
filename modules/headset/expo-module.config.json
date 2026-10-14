@@ -1,0 +1,9 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": {
+    "modules": ["HeadsetModule"]
+  },
+  "android": {
+    "modules": ["expo.modules.headset.HeadsetModule"]
+  }
+}
