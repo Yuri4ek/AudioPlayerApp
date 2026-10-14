@@ -1,4 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { memo } from 'react';
 import { StyleSheet } from 'react-native';
@@ -20,20 +21,25 @@ const hash = (s: string) => {
   return Math.abs(h);
 };
 
-type Props = { seed: string; size: number; radius?: number };
+/** Gradient used for a track without artwork; also tints the player background. */
+export const coverGradient = (seed: string) => GRADIENTS[hash(seed) % GRADIENTS.length];
 
-export const Cover = memo(function Cover({ seed, size, radius = size * 0.28 }: Props) {
+type Props = { seed: string; uri?: string; size: number; radius?: number };
+
+export const Cover = memo(function Cover({ seed, uri, size, radius = size * 0.28 }: Props) {
+  const box = { width: size, height: size, borderRadius: radius };
+  if (uri) {
+    return <Image source={uri} style={box} contentFit="cover" transition={150} recyclingKey={seed} cachePolicy="memory-disk" />;
+  }
   return (
-    <LinearGradient
-      colors={GRADIENTS[hash(seed) % GRADIENTS.length]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={[s.box, { width: size, height: size, borderRadius: radius }]}
-    >
+    <LinearGradient colors={coverGradient(seed)} start={START} end={END} style={[s.box, box]}>
       <Ionicons name="musical-notes" size={size * 0.42} color="rgba(255,255,255,0.92)" />
     </LinearGradient>
   );
 });
+
+const START = { x: 0, y: 0 };
+const END = { x: 1, y: 1 };
 
 const s = StyleSheet.create({
   box: { alignItems: 'center', justifyContent: 'center' },

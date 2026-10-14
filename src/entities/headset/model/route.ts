@@ -1,24 +1,38 @@
 import { useSyncExternalStore } from 'react';
 
-import { type AudioRoute, Headset } from '@/shared/api/headset';
+import { type AudioOutput, type AudioRoute, Headset } from '@/shared/api/headset';
+
+type Snapshot = { route: AudioRoute; outputs: AudioOutput[] };
 
 const FALLBACK: AudioRoute = { type: 'speaker', name: '' };
 
-let current: AudioRoute = Headset?.getRoute() ?? FALLBACK;
+const read = (): Snapshot => ({
+  route: Headset?.getRoute() ?? FALLBACK,
+  outputs: Headset?.getOutputs?.() ?? [],
+});
+
+const keyOf = (s: Snapshot) =>
+  `${s.route.type}|${s.route.name}|${s.route.id}|${s.outputs.map((o) => `${o.id}:${o.type}:${o.name}`).join(',')}`;
+
+let current = read();
+let currentKey = keyOf(current);
 const listeners = new Set<() => void>();
 let sub: { remove: () => void } | null = null;
 
-const update = (r: AudioRoute) => {
-  if (r.type === current.type && r.name === current.name) return;
-  current = r;
+const refresh = () => {
+  const next = read();
+  const k = keyOf(next);
+  if (k === currentKey) return;
+  current = next;
+  currentKey = k;
   listeners.forEach((l) => l());
 };
 
 const subscribe = (cb: () => void) => {
   listeners.add(cb);
   if (!sub && Headset) {
-    sub = Headset.addListener('onRouteChange', update);
-    update(Headset.getRoute());
+    sub = Headset.addListener('onRouteChange', refresh);
+    refresh();
   }
   return () => {
     listeners.delete(cb);
@@ -29,8 +43,16 @@ const subscribe = (cb: () => void) => {
   };
 };
 
-const snapshot = () => current;
+const getRoute = () => current.route;
+const getOutputs = () => current.outputs;
 
-export const useAudioRoute = () => useSyncExternalStore(subscribe, snapshot);
+/** Where the system sends media by default (headphones win over the speaker). */
+export const useAudioRoute = () => useSyncExternalStore(subscribe, getRoute);
+/** All outputs music can be sent to right now. */
+export const useAudioOutputs = () => useSyncExternalStore(subscribe, getOutputs);
+/** Non-hook access, e.g. for event handlers. */
+export const audioOutputs = () => current.outputs;
+export const subscribeAudioRoute = subscribe;
+export const audioRoute = () => current.route;
 
-export const isHeadphones = (r: AudioRoute) => r.type !== 'speaker' && r.type !== 'airplay';
+export const isHeadphones = (r: Pick<AudioRoute, 'type'>) => r.type !== 'speaker' && r.type !== 'airplay';

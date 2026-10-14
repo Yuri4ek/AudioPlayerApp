@@ -1,16 +1,20 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { usePlayer, useProgress } from '@/entities/player';
 import { useTheme } from '@/shared/theme';
 
+const START = { x: 0, y: 0 };
+const END = { x: 1, y: 0 };
+
 export const ProgressLine = memo(function ProgressLine() {
   const t = useTheme();
   const duration = usePlayer((s) => s.duration);
   const ratio = useProgress((s) => (duration > 0 ? Math.min(1, s.position / duration) : 0));
   return (
-    <View style={[s.line, { backgroundColor: t.sep }]}>
-      <View style={[s.fill, { width: `${ratio * 100}%`, backgroundColor: t.accent }]} />
+    <View style={[s.line, { backgroundColor: t.dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.07)' }]}>
+      <LinearGradient colors={t.grad} start={START} end={END} style={[s.fill, { width: `${ratio * 100}%` }]} />
     </View>
   );
 });

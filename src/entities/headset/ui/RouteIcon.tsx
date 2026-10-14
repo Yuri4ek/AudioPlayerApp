@@ -1,13 +1,13 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { memo } from 'react';
 
-import type { RouteType } from '@/shared/api/headset';
+import type { AudioRoute, RouteType } from '@/shared/api/headset';
 
 const ICONS = {
   speaker: 'phone-portrait-outline',
   wired: 'headset',
   usb: 'headset',
-  bluetooth: 'bluetooth',
+  bluetooth: 'headset',
   airplay: 'tv-outline',
 } as const;
 
@@ -22,3 +22,9 @@ export const ROUTE_LABEL: Record<RouteType, string> = {
   bluetooth: 'Bluetooth-наушники',
   airplay: 'AirPlay',
 };
+
+/** Short title: «Динамики» or «Наушники». */
+export const routeTitle = (r: Pick<AudioRoute, 'type'>) => (r.type === 'speaker' ? 'Динамики' : r.type === 'airplay' ? 'AirPlay' : 'Наушники');
+
+/** Device name, falling back to the kind of output. */
+export const routeName = (r: Pick<AudioRoute, 'type' | 'name'>) => r.name || ROUTE_LABEL[r.type];

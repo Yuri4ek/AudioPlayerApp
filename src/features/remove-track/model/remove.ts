@@ -1,7 +1,7 @@
 import { Alert } from 'react-native';
 
 import { stop, usePlayer } from '@/entities/player';
-import { type Track, trackFile, useTracks } from '@/entities/track';
+import { type Track, deleteTrackFiles, useTracks } from '@/entities/track';
 
 export const confirmRemove = (track: Track) =>
   Alert.alert('Удалить трек?', `«${track.title}» будет удалён с устройства`, [
@@ -12,9 +12,7 @@ export const confirmRemove = (track: Track) =>
       onPress: () => {
         if (usePlayer.getState().currentId === track.id) stop();
         useTracks.getState().remove(track.id);
-        try {
-          trackFile(track).delete();
-        } catch {}
+        deleteTrackFiles(track);
       },
     },
   ]);

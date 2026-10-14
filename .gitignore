@@ -42,3 +42,6 @@ yarn-error.*
 
 /ios
 /android
+
+# native module build output
+modules/*/android/build/

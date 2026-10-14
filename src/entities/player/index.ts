@@ -1,1 +1,18 @@
-export { usePlayer, useProgress, play, toggle, next, previous, seek, stop } from './model/engine';
+export {
+  usePlayer,
+  useProgress,
+  useVolume,
+  DEFAULT_VOLUME,
+  getAudioPlayer,
+  onAudioPlayer,
+  play,
+  resume,
+  pause,
+  toggle,
+  next,
+  previous,
+  seek,
+  setVolume,
+  stop,
+  refreshLockScreen,
+} from './model/engine';

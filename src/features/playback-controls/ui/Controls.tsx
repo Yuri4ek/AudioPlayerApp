@@ -4,9 +4,9 @@ import { StyleSheet, View } from 'react-native';
 import { next, previous, toggle, usePlayer } from '@/entities/player';
 import { IconButton } from '@/shared/ui';
 
-export const PlayButton = memo(function PlayButton({ size = 48 }: { size?: number }) {
+export const PlayButton = memo(function PlayButton({ size = 48, glow }: { size?: number; glow?: boolean }) {
   const playing = usePlayer((s) => s.playing);
-  return <IconButton icon={playing ? 'pause' : 'play'} primary size={size} onPress={toggle} label={playing ? 'Пауза' : 'Играть'} />;
+  return <IconButton icon={playing ? 'pause' : 'play'} primary glow={glow} size={size} onPress={toggle} label={playing ? 'Пауза' : 'Играть'} />;
 });
 
 export const NextButton = memo(function NextButton({ size = 44 }: { size?: number }) {
@@ -21,7 +21,7 @@ export const Controls = memo(function Controls() {
   return (
     <View style={s.row}>
       <PrevButton size={64} />
-      <PlayButton size={84} />
+      <PlayButton size={84} glow />
       <NextButton size={64} />
     </View>
   );

@@ -35,7 +35,16 @@
       "expo-sqlite",
       "expo-font",
       "expo-asset",
-      "./plugins/withSceneDelegate"
+      "./plugins/withSceneDelegate",
+      "expo-image",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Нужен доступ к фото, чтобы выбрать фон приложения",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
+      ]
     ],
     "scheme": "audioplayer",
     "backgroundColor": "#F2F3F5",

@@ -1,4 +1,6 @@
 export type { Track } from './model/types';
-export { useTracks } from './model/store';
-export { musicDir, trackFile, parseName } from './lib/files';
+export { useTracks, useTrack } from './model/store';
+export { scanPending } from './model/scan';
+export { musicDir, trackFile, artUri, parseName, readLyrics, writeLyrics, deleteTrackFiles } from './lib/files';
 export { TrackRow, TRACK_ROW_HEIGHT } from './ui/TrackRow';
+export { TrackBackdrop } from './ui/TrackBackdrop';

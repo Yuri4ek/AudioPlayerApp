@@ -1,16 +1,21 @@
 import { type AudioPlayer, type AudioStatus, createAudioPlayer, setAudioModeAsync } from 'expo-audio';
 import { create } from 'zustand';
 
-import { trackFile, useTracks } from '@/entities/track/@x/player';
+import { artUri, trackFile, useTracks } from '@/entities/track/@x/player';
 
 type PlayerState = { currentId: string | null; playing: boolean; duration: number };
 
 export const usePlayer = create<PlayerState>()(() => ({ currentId: null, playing: false, duration: 0 }));
 export const useProgress = create<{ position: number }>()(() => ({ position: 0 }));
 
+/** App volume 0..1; every launch starts at 50%. */
+export const DEFAULT_VOLUME = 0.5;
+export const useVolume = create<{ volume: number }>()(() => ({ volume: DEFAULT_VOLUME }));
+
 let player: AudioPlayer | null = null;
 let lockScreen = false;
 let holdUntil = 0;
+const created = new Set<(p: AudioPlayer) => void>();
 
 const onStatus = (s: AudioStatus) => {
   const st = usePlayer.getState();
@@ -29,8 +34,25 @@ setAudioModeAsync({
 const ensure = () => {
   if (player) return player;
   player = createAudioPlayer(null, { updateInterval: 500 });
+  player.volume = useVolume.getState().volume;
   player.addListener('playbackStatusUpdate', onStatus);
+  created.forEach((cb) => cb(player!));
   return player;
+};
+
+/** The underlying player, if one exists yet. */
+export const getAudioPlayer = () => player;
+
+/** Runs `cb` with the player now (if created) and whenever it gets created. */
+export const onAudioPlayer = (cb: (p: AudioPlayer) => void) => {
+  created.add(cb);
+  if (player) cb(player);
+  return () => void created.delete(cb);
+};
+
+const lockScreenMeta = (id: string) => {
+  const track = useTracks.getState().tracks.find((t) => t.id === id);
+  return track ? { title: track.title, artist: track.artist, artworkUrl: artUri(track) } : null;
 };
 
 export const play = (id: string) => {
@@ -41,7 +63,7 @@ export const play = (id: string) => {
   p.play();
   usePlayer.setState({ currentId: id, playing: true, duration: 0 });
   useProgress.setState({ position: 0 });
-  const meta = { title: track.title, artist: track.artist };
+  const meta = lockScreenMeta(id)!;
   if (lockScreen) p.updateLockScreenMetadata(meta);
   else {
     p.setActiveForLockScreen(true, meta);
@@ -49,17 +71,31 @@ export const play = (id: string) => {
   }
 };
 
-export const toggle = () => {
-  const { currentId, playing } = usePlayer.getState();
+/** Refreshes title/artist/artwork on the lock screen after tags were read. */
+export const refreshLockScreen = () => {
+  const { currentId } = usePlayer.getState();
+  const meta = currentId && lockScreenMeta(currentId);
+  if (player && lockScreen && meta) player.updateLockScreenMetadata(meta);
+};
+
+export const resume = () => {
+  const { currentId } = usePlayer.getState();
   if (!currentId || !player) {
     const first = useTracks.getState().tracks[0];
     if (first) play(first.id);
     return;
   }
-  if (playing) player.pause();
-  else player.play();
-  usePlayer.setState({ playing: !playing });
+  player.play();
+  usePlayer.setState({ playing: true });
 };
+
+export const pause = () => {
+  if (!player) return;
+  player.pause();
+  usePlayer.setState({ playing: false });
+};
+
+export const toggle = () => (usePlayer.getState().playing ? pause() : resume());
 
 const step = (d: 1 | -1) => {
   const list = useTracks.getState().tracks;
@@ -80,6 +116,12 @@ export const seek = (sec: number) => {
   holdUntil = Date.now() + 800;
   useProgress.setState({ position: sec });
   player.seekTo(sec).catch(() => {});
+};
+
+export const setVolume = (v: number) => {
+  const volume = Math.max(0, Math.min(1, v));
+  useVolume.setState({ volume });
+  if (player) player.volume = volume;
 };
 
 export const stop = () => {

@@ -1,7 +1,7 @@
 import * as DocumentPicker from 'expo-document-picker';
 import { File } from 'expo-file-system';
 
-import { type Track, musicDir, parseName, useTracks } from '@/entities/track';
+import { type Track, musicDir, parseName, scanPending, useTracks } from '@/entities/track';
 import { uid } from '@/shared/lib';
 
 export const pickTracks = async () => {
@@ -23,5 +23,8 @@ export const pickTracks = async () => {
       added.push({ id, file, ...parseName(a.name) });
     } catch {}
   }
-  if (added.length) useTracks.getState().add(added);
+  if (added.length) {
+    useTracks.getState().add(added);
+    scanPending();
+  }
 };

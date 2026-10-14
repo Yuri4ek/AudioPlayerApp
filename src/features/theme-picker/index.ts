@@ -1,1 +1,1 @@
-export { ModePicker, AccentPicker } from './ui/ThemePicker';
+export { ModePicker, AccentPicker, BackgroundPicker } from './ui/ThemePicker';
